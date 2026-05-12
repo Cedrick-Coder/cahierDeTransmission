@@ -13,7 +13,7 @@ class ApiService {
   /// Envoie un seul record au serveur (utilisé lors de la création)
   static Future<bool> envoyerAuServeur(Transmission transmission) async {
     try {
-      print("📤 Envoi au serveur : ${transmission.toMap()}");
+      transmission.toMap();
       final response = await http
           .post(
             Uri.parse('$baseUrl/sync'),
@@ -21,22 +21,15 @@ class ApiService {
             body: json.encode(transmission.toMap()),
           )
           .timeout(const Duration(seconds: 30)); // Augmenté à 30 secondes
-
-      print("📥 Réponse reçue - Status: ${response.statusCode}");
-      print("📥 Body: ${response.body}");
       
       if (response.statusCode == 201 || response.statusCode == 200) {
-        print("✅ Synchronisation réussie");
         return true;
       } else {
-        print("❌ Erreur serveur : ${response.statusCode} - ${response.body}");
         return false;
       }
     } on TimeoutException catch (e) {
-      print("⏱️ Délai d'attente dépassé : $e");
       return false;
     } catch (e) {
-      print("🌐 Erreur réseau : $e");
       return false;
     }
   }
