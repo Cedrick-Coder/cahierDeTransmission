@@ -17,11 +17,12 @@ class DBHelper {
     String path = join(await getDatabasesPath(), "transmission.db");
     return await openDatabase(
       path,
-      version: 1,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
         CREATE TABLE transmissions (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
+          server_id INTEGER,
           nom TEXT,
           provenance TEXT,
           provenanceResult TEXT,
@@ -30,16 +31,25 @@ class DBHelper {
           quantite INTEGER,
           details TEXT,
           date TEXT,
+          date_remise TEXT,
           estTerminee INTEGER,
           is_synced INTEGER DEFAULT 0
         )
       ''');
       },
-      // MAJ la table si exxist
+      // MAJ la table si existe
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await db.execute(
+            "ALTER TABLE transmissions ADD COLUMN server_id INTEGER",
+          );
+          await db.execute(
             "ALTER TABLE transmissions ADD COLUMN is_synced INTEGER DEFAULT 0",
+          );
+        }
+        if (oldVersion < 3) {
+          await db.execute(
+            "ALTER TABLE transmissions ADD COLUMN date_remise TEXT",
           );
         }
       },
@@ -77,6 +87,17 @@ class DBHelper {
     );
   }
 
+  // Enregistrer l'identifiant distant renvoyé par le serveur
+  Future<int> updateServerId(int localId, int serverId) async {
+    var dbClient = await db;
+    return await dbClient.update(
+      "transmissions",
+      {'server_id': serverId},
+      where: "id = ?",
+      whereArgs: [localId],
+    );
+  }
+
   // Récupérer toutes les transmissions
   Future<List<Transmission>> getAll() async {
     var dbClient = await db;
@@ -84,21 +105,7 @@ class DBHelper {
       "transmissions",
       orderBy: "id DESC",
     );
-    return List.generate(maps.length, (i) {
-      return Transmission(
-        ID: maps[i]['id'],
-        nom: maps[i]['nom'],
-        provenance: maps[i]['provenance'],
-        provenanceResult: maps[i]['provenanceResult'],
-        type: maps[i]['type'],
-        responsable: maps[i]['responsable'],
-        quantite: maps[i]['quantite'],
-        details: maps[i]['details'],
-        date: DateTime.parse(maps[i]['date']),
-        estTerminee: maps[i]['estTerminee'] == 1,
-        isSynced: maps[i]['is_synced'] == 1 || maps[i]['is_synced'] == true,
-      );
-    });
+    return maps.map((row) => Transmission.fromMap(row)).toList();
   }
 
   // Mettre à jour le statut (Terminée)
@@ -106,7 +113,7 @@ class DBHelper {
     var dbClient = await db;
     return await dbClient.update(
       "transmissions",
-      {'estTerminee': status ? 1 : 0},
+      {'estTerminee': status ? 1 : 0, 'is_synced': 0},
       where: "id = ?",
       whereArgs: [id],
     );

@@ -5,29 +5,44 @@ import '../modeleDEClasse/transmission.dart';
 import '../dataBase/dbManager.dart';
 
 class ApiService {
-  // 10.0.2.2 est l'adresse pour accéder au localhost depuis l'émulateur Android
+  // 10.0.2.2 == adresse pour accéder au localhost depuis l'émulateur Android
   static const String baseUrl = "http://192.168.0.150:8000/api";
 
-  final dbHelper = DBHelper();
+  static final DBHelper dbHelper = DBHelper();
 
   /// Envoie un seul record au serveur (utilisé lors de la création)
   static Future<bool> envoyerAuServeur(Transmission transmission) async {
     try {
-      transmission.toMap();
       final response = await http
           .post(
             Uri.parse('$baseUrl/sync'),
             headers: {'Content-Type': 'application/json'},
-            body: json.encode(transmission.toMap()),
+            body: json.encode(transmission.toJson()),
           )
           .timeout(const Duration(seconds: 30)); // Augmenté à 30 secondes
       
       if (response.statusCode == 201 || response.statusCode == 200) {
+        final body = json.decode(response.body);
+        int? serverId;
+
+        if (body is Map<String, dynamic>) {
+          final data = body['data'];
+          if (data is Map<String, dynamic> && data['id'] is int) {
+            serverId = data['id'];
+          } else if (body['id'] is int) {
+            serverId = body['id'];
+          }
+        }
+
+        if (serverId != null && transmission.ID != null) {
+          await dbHelper.updateServerId(transmission.ID!, serverId);
+        }
+
         return true;
       } else {
         return false;
       }
-    } on TimeoutException catch (e) {
+    } on TimeoutException {
       return false;
     } catch (e) {
       return false;
@@ -40,17 +55,27 @@ class ApiService {
     List<Transmission> unsyncedData = await dbHelper.getUnsynced();
 
     if (unsyncedData.isEmpty) {
-      print("Toutes les données sont déjà à jour.");
       return 0;
     }
 
     int syncedCount = 0;
     for (var transmission in unsyncedData) {
-      bool success = await envoyerAuServeur(transmission);
+      bool success;
+      if (transmission.serverId != null) {
+        success = await updateTransmissionOnServer(
+          transmission.serverId!,
+          {
+            'estTerminee': transmission.estTerminee,
+            'is_synced': true,
+          },
+        );
+      } else {
+        success = await envoyerAuServeur(transmission);
+      }
+
       if (success) {
         await dbHelper.markAsSynced(transmission.ID!);
         syncedCount++;
-        print("Record ${transmission.ID} marqué comme synchronisé en local.");
       }
     }
 
@@ -72,12 +97,32 @@ class ApiService {
           // Insérer ou mettre à jour en local
           await dbHelper.insert(transmission);
         }
-        print("Synchronisation depuis le serveur réussie");
-      } else {
-        print("Erreur serveur : ${response.body}");
       }
     } catch (e) {
       print("Erreur réseau : $e");
+    }
+  }
+
+  /// Met à jour une transmission sur le serveur
+  static Future<bool> updateTransmissionOnServer(int id, Map<String, dynamic> updates) async {
+    try {
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/transmissions/$id'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode(updates),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } on TimeoutException {
+      return false;
+    } catch (e) {
+      return false;
     }
   }
 }

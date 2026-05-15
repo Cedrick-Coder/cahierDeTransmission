@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../modeleDEClasse/transmission.dart';
+import 'package:intl/intl.dart';
 
 class FormScreen extends StatefulWidget {
   const FormScreen({super.key});
@@ -21,6 +22,9 @@ class _FormScreenState extends State<FormScreen> {
   final TextEditingController _subProvenanceController =
       TextEditingController();
   final TextEditingController _responsableController = TextEditingController();
+  final TextEditingController _dateDelivranceController = TextEditingController(
+    text: "00-00-0000",
+  );
 
   // Variables d'état
   String provenance = "interne";
@@ -118,7 +122,38 @@ class _FormScreenState extends State<FormScreen> {
     _detailsController.dispose();
     _subProvenanceController.dispose();
     _responsableController.dispose();
+    _dateDelivranceController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDate(BuildContext context) async {
+    final DateTime now = DateTime.now();
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: now.add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(now.year + 10),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.deepPurple.shade400,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _dateDelivranceController.text = DateFormat(
+          'dd-MM-yyyy',
+        ).format(picked);
+      });
+    }
   }
 
   @override
@@ -300,7 +335,12 @@ class _FormScreenState extends State<FormScreen> {
                   Radio(
                     value: "déposition",
                     groupValue: type,
-                    onChanged: (v) => setState(() => type = v.toString()),
+                    onChanged: (v) {
+                      setState(() {
+                        type = v.toString();
+                        _dateDelivranceController.text = "00-00-0000";
+                      });
+                    },
                   ),
                   const Text("Déposition"),
                 ],
@@ -318,6 +358,70 @@ class _FormScreenState extends State<FormScreen> {
                     validator: (value) =>
                         value!.isEmpty ? "Précisez le responsable" : null,
                   ),
+                ),
+
+              const SizedBox(height: 20),
+
+              if (type == "prêt")
+                TextFormField(
+                  controller: _dateDelivranceController,
+                  readOnly: true,
+                  validator: (value) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        value == "00-00-0000") {
+                      return 'Veuillez sélectionner une date de remise';
+                    }
+                    try {
+                      DateFormat('dd-MM-yyyy').parseStrict(value);
+                    } catch (_) {
+                      return 'Date invalide';
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    labelText: "Date de remise",
+                    border:OutlineInputBorder(),
+                    labelStyle: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4.0),
+                      borderSide: BorderSide(color: Colors.grey.shade400),
+                    ),
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.calendar_month_outlined,
+                            color: Colors.black87,
+                          ),
+                          onPressed: () => _pickDate(context),
+                        ),
+                        if (_dateDelivranceController.text != "00-00-0000")
+                          IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _dateDelivranceController.text = "00-00-0000";
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 15,
+                    ),
+                  ),
+                  style: const TextStyle(fontSize: 16, letterSpacing: 1.2),
                 ),
 
               const SizedBox(height: 20),
@@ -351,6 +455,11 @@ class _FormScreenState extends State<FormScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
+                      final DateTime selectedRemiseDate = type == "prêt"
+                          ? DateFormat(
+                              'dd-MM-yyyy',
+                            ).parseStrict(_dateDelivranceController.text)
+                          : _dateFixe;
                       final nouvelleTransmission = Transmission(
                         nom: _nomController.text,
                         provenance: provenance,
@@ -362,6 +471,7 @@ class _FormScreenState extends State<FormScreen> {
                         quantite: int.parse(_quantiteController.text),
                         details: _detailsController.text,
                         date: _dateFixe,
+                        dateRemise: type == "prêt" ? selectedRemiseDate : null,
                       );
                       Navigator.pop(context, nouvelleTransmission);
                     }

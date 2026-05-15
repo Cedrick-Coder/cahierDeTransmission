@@ -16,13 +16,17 @@ class Transmission extends Model
         'quantite',
         'details',
         'date',
+        'date_remise',
         'estTerminee',
+        'is_synced',
     ];
 
     //'date' doit être traité comme un objet(DateTime)
     
     protected $casts = [
         'date' => 'datetime',
+        'date_remise' => 'datetime',
         'estTerminee' => 'boolean',
+        'is_synced' => 'boolean',
     ];
 }
