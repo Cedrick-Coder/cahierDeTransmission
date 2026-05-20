@@ -109,10 +109,68 @@ class _FormScreenState extends State<FormScreen> {
       "Imeritsiatosika",
       "Tanjombato",
     ],
-    "Fanantenana": ["Ambositra", "Fandriana", "Fianarantsoa", "Ambalavao"],
-    "Manoro": ["Faratsiho", "Betafo", "Antsenakely", "Ambatolampy", "Behenjy"],
-    "Majunga": ["Marovoay", "Ambato-boeny", "Manjarisoa", "Tanambao sotema"],
-    "Betsiboka": ["Maevatanana", "Andriba", "Manerinerina"],
+    "Fanantenana": [
+      "Ambositra",
+      "Fandriana",
+      "Fianarantsoa",
+      "Ambalavao"
+    ],
+    "Manoro": [
+      "Faratsiho",
+      "Betafo",
+      "Antsenakely",
+      "Ambatolampy",
+      "Behenjy"
+    ],
+    "Majunga": [
+      "Marovoay",
+      "Ambato-boeny",
+      "Manjarisoa"
+      "Tanambao sotema"
+    ],
+    "Betsiboka": [
+      "Maevatanana",
+      "Andriba"
+      "Manerinerina"
+    ],
+    "Anosy" : [
+      "Fort-Dauphin",
+      "Amboasary",
+      "Manambaro",
+      "Ambovombe",
+      "Tanambao",
+      "Tsihombe",
+      "Beloha",
+      "Bekily"
+    ],
+    "Alaotra Mangoro" : [
+      "Ambatondrazaka",
+      "Tanambe",
+      "Andaingo",
+      "Moramanga",
+      "Anjiro",
+      "Amparafara vola",
+      "Morarano Chrome"
+    ],
+    "Analanjirofo" : [
+      "Fenerive Est",
+      "Vavantenina",
+      "Maromitety",
+      "Soanierana Ivongo",
+      "Toamasina",
+      "Vatomandry",
+      "Foulpointe"
+    ],
+    "Sofia" : [
+      "Antsohihy",
+      "Befandriana Nord",
+      "Mandritsara",
+      "Bealanana",
+      "Ambatoriha"
+    ],
+
+
+
   };
 
   @override
