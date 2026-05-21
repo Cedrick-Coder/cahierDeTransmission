@@ -85,12 +85,12 @@ class directionEtCaisse {
     "Majunga": [
       "Marovoay",
       "Ambato-boeny",
-      "Manjarisoa"
+      "Manjarisoa",
       "Tanambao sotema"
     ],
     "Betsiboka": [
       "Maevatanana",
-      "Andriba"
+      "Andriba",
       "Manerinerina"
     ],
     "Anosy" : [

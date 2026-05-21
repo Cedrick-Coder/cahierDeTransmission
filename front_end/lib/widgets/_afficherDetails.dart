@@ -5,7 +5,7 @@ import '../modeleDEClasse/transmission.dart';
 class TransmissionDetailsDialog extends StatelessWidget {
   final Transmission item;
 
-  const TransmissionDetailsDialog({super.key, Skinner, required this.item});
+  const TransmissionDetailsDialog({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
