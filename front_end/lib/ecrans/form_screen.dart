@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import '../modeleDEClasse/transmission.dart';
 import 'package:intl/intl.dart';
+import 'package:front_end/constData/directionEtCaisse.dart';
+import '../widgets/form_sections.dart';
 
 class FormScreen extends StatefulWidget {
   const FormScreen({super.key});
@@ -37,141 +39,11 @@ class _FormScreenState extends State<FormScreen> {
   String? selectedCaisse;
   List<String> caissesDisponibles = [];
 
-  // Données pour le choix Interne
-  final List<String> directions = [
-    "Direction Générale",
-    "Direction des Ressources Humaines",
-    "Direction Financière",
-    "Direction Technique",
-    "Direction Commerciale",
-    "Direction Logistique",
-    "Direction Comptabilité",
-    "Direction des Declarations",
-    "Direction Juriste",
-    "Direction Audit",
-    "Direction Marketing",
-    "Direction des Opération",
-    "Direction du Mutuelle de Santé",
-    "Direction du Responsable Controle Permanent",
-  ];
+  // appel des données pour direction
+  final List<String> directions = directionEtCaisse.directions;
 
-  // agence/caisse en map(data struct = map/dictionnaire)
-  final Map<String, List<String>> agencesEtCaisses = {
-    "Farimbontsoa": [
-      "67ha",
-      "Antohomadinika",
-      "Ampefiloha",
-      "Anosibe",
-      "Ankazomanga",
-      "Anosizato",
-    ],
-    "Aina": [
-      "Ambanidia",
-      "Ambohipo",
-      "Mandroseza",
-      "Andrefana",
-      "Soanierana",
-      "Andramasina",
-      "Arivonimamo",
-      "Miarinarivo",
-      "Soavinandriana",
-      "Tsiroanomandidy",
-    ],
-    "Vonjy": [
-      "Mahavoky",
-      "Andravoahangy",
-      "Ankadidramamy",
-      "Analamahitsy",
-      "Alarobia",
-      "Soarano",
-      "Avaradoha",
-    ],
-    "Rindra": [
-      "Mangamila",
-      "Ankazondandy",
-      "Ambatomena",
-      "Manjakandrina",
-      "Anjepy",
-      "Anjozorobe",
-    ],
-    "Mahasoa": [
-      "Ambohibao",
-      "Ambohidratrimo",
-      "Ivato",
-      "Ambohimanarina",
-      "Ambatolampy Tsimahafotsy",
-    ],
-    "Fanavotana": [
-      "Itaosy",
-      "Alasora",
-      "Andoharanofotsy",
-      "Ampitatafika",
-      "Imeritsiatosika",
-      "Tanjombato",
-    ],
-    "Fanantenana": [
-      "Ambositra",
-      "Fandriana",
-      "Fianarantsoa",
-      "Ambalavao"
-    ],
-    "Manoro": [
-      "Faratsiho",
-      "Betafo",
-      "Antsenakely",
-      "Ambatolampy",
-      "Behenjy"
-    ],
-    "Majunga": [
-      "Marovoay",
-      "Ambato-boeny",
-      "Manjarisoa"
-      "Tanambao sotema"
-    ],
-    "Betsiboka": [
-      "Maevatanana",
-      "Andriba"
-      "Manerinerina"
-    ],
-    "Anosy" : [
-      "Fort-Dauphin",
-      "Amboasary",
-      "Manambaro",
-      "Ambovombe",
-      "Tanambao",
-      "Tsihombe",
-      "Beloha",
-      "Bekily"
-    ],
-    "Alaotra Mangoro" : [
-      "Ambatondrazaka",
-      "Tanambe",
-      "Andaingo",
-      "Moramanga",
-      "Anjiro",
-      "Amparafara vola",
-      "Morarano Chrome"
-    ],
-    "Analanjirofo" : [
-      "Fenerive Est",
-      "Vavantenina",
-      "Maromitety",
-      "Soanierana Ivongo",
-      "Toamasina",
-      "Vatomandry",
-      "Foulpointe"
-    ],
-    "Sofia" : [
-      "Antsohihy",
-      "Befandriana Nord",
-      "Mandritsara",
-      "Bealanana",
-      "Ambatoriha"
-    ],
-
-
-
-  };
+  // appel des données pour agence et caisse
+  final Map<String, List<String>> agencesEtCaisses = directionEtCaisse.agencesEtCaisses;
 
   @override
   void dispose() {
@@ -243,54 +115,24 @@ class _FormScreenState extends State<FormScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Choix Provenance
-              const Text(
-                "Provenance :",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Row(
-                children: [
-                  Radio(
-                    value: "interne",
-                    groupValue: provenance,
-                    onChanged: (value) {
-                      setState(() {
-                        provenance = value.toString();
-                        _subProvenanceController.clear();
-                        selectedDirection = null;
-                      });
-                    },
-                  ),
-                  const Text("Interne"),
-                  Radio(
-                    value: "externe",
-                    groupValue: provenance,
-                    onChanged: (value) {
-                      setState(() {
-                        provenance = value.toString();
-                        _subProvenanceController.clear();
-                        selectedAgence = null;
-                        selectedCaisse = null;
-                      });
-                    },
-                  ),
-                  const Text("Externe"),
-                ],
+              ProvenanceSelector(
+                provenance: provenance,
+                onChanged: (value) {
+                  setState(() {
+                    provenance = value.toString();
+                    _subProvenanceController.clear();
+                    selectedDirection = null;
+                    selectedAgence = null;
+                    selectedCaisse = null;
+                    caissesDisponibles = [];
+                  });
+                },
               ),
 
-              //logique de la liste déroulante
               if (provenance == "interne")
-                DropdownButtonFormField<String>(
-                  value: selectedDirection,
-                  decoration: const InputDecoration(
-                    labelText: "Sélectionner la Direction",
-                    border: OutlineInputBorder(),
-                  ),
-                  items: directions
-                      .map(
-                        (dir) => DropdownMenuItem(value: dir, child: Text(dir)),
-                      )
-                      .toList(),
+                DirectionDropdown(
+                  directions: directions,
+                  selectedDirection: selectedDirection,
                   onChanged: (val) {
                     setState(() {
                       selectedDirection = val;
@@ -301,66 +143,31 @@ class _FormScreenState extends State<FormScreen> {
                       value == null ? "Sélectionnez une direction" : null,
                 )
               else
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: selectedAgence,
-                        decoration: const InputDecoration(
-                          labelText: "Agence",
-                          border: OutlineInputBorder(),
-                        ),
-                        items: agencesEtCaisses.keys
-                            .map(
-                              (ag) => DropdownMenuItem(
-                                value: ag,
-                                child: Text(
-                                  ag,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            selectedAgence = val;
-                            selectedCaisse = null;
-                            caissesDisponibles = agencesEtCaisses[val]!;
-                          });
-                        },
-                        validator: (value) => value == null ? "Agence ?" : null,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: selectedCaisse,
-                        decoration: const InputDecoration(
-                          labelText: "Caisse",
-                          border: OutlineInputBorder(),
-                        ),
-                        items: caissesDisponibles
-                            .map(
-                              (c) => DropdownMenuItem(
-                                value: c,
-                                child: Text(
-                                  c,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            selectedCaisse = val;
-                            _subProvenanceController.text =
-                                "$selectedAgence - $val";
-                          });
-                        },
-                        validator: (value) => value == null ? "Caisse ?" : null,
-                      ),
-                    ),
-                  ],
+                AgenceCaisseSelector(
+                  agences: agencesEtCaisses.keys.toList(),
+                  selectedAgence: selectedAgence,
+                  selectedCaisse: selectedCaisse,
+                  caissesDisponibles: caissesDisponibles,
+                  onAgenceChanged: (val) {
+                    setState(() {
+                      selectedAgence = val;
+                      selectedCaisse = null;
+                      caissesDisponibles = val != null
+                          ? agencesEtCaisses[val]!
+                          : [];
+                    });
+                  },
+                  onCaisseChanged: (val) {
+                    setState(() {
+                      selectedCaisse = val;
+                      _subProvenanceController.text =
+                          "$selectedAgence - $val";
+                    });
+                  },
+                  agenceValidator: (value) =>
+                      value == null ? "Agence ?" : null,
+                  caisseValidator: (value) =>
+                      value == null ? "Caisse ?" : null,
                 ),
 
               const SizedBox(height: 20),
@@ -377,31 +184,16 @@ class _FormScreenState extends State<FormScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Choix Type
-              const Text(
-                "Type de mouvement :",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Row(
-                children: [
-                  Radio(
-                    value: "prêt",
-                    groupValue: type,
-                    onChanged: (v) => setState(() => type = v.toString()),
-                  ),
-                  const Text("Prêt"),
-                  Radio(
-                    value: "déposition",
-                    groupValue: type,
-                    onChanged: (v) {
-                      setState(() {
-                        type = v.toString();
-                        _dateDelivranceController.text = "00-00-0000";
-                      });
-                    },
-                  ),
-                  const Text("Déposition"),
-                ],
+              TypeSelector(
+                type: type,
+                onChanged: (v) {
+                  setState(() {
+                    type = v.toString();
+                    if (type == "déposition") {
+                      _dateDelivranceController.text = "00-00-0000";
+                    }
+                  });
+                },
               ),
 
               if (type == "déposition")
@@ -421,9 +213,14 @@ class _FormScreenState extends State<FormScreen> {
               const SizedBox(height: 20),
 
               if (type == "prêt")
-                TextFormField(
+                DateRemiseField(
                   controller: _dateDelivranceController,
-                  readOnly: true,
+                  onPickDate: () => _pickDate(context),
+                  onClearDate: () {
+                    setState(() {
+                      _dateDelivranceController.text = "00-00-0000";
+                    });
+                  },
                   validator: (value) {
                     if (value == null ||
                         value.isEmpty ||
@@ -437,49 +234,6 @@ class _FormScreenState extends State<FormScreen> {
                     }
                     return null;
                   },
-                  decoration: InputDecoration(
-                    labelText: "Date de remise",
-                    border:OutlineInputBorder(),
-                    labelStyle: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
-                    floatingLabelBehavior: FloatingLabelBehavior.always,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(4.0),
-                      borderSide: BorderSide(color: Colors.grey.shade400),
-                    ),
-                    suffixIcon: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.calendar_month_outlined,
-                            color: Colors.black87,
-                          ),
-                          onPressed: () => _pickDate(context),
-                        ),
-                        if (_dateDelivranceController.text != "00-00-0000")
-                          IconButton(
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.grey,
-                              size: 20,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _dateDelivranceController.text = "00-00-0000";
-                              });
-                            },
-                          ),
-                      ],
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 15,
-                    ),
-                  ),
-                  style: const TextStyle(fontSize: 16, letterSpacing: 1.2),
                 ),
 
               const SizedBox(height: 20),
