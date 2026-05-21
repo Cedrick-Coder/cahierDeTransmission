@@ -1,12 +1,11 @@
 // ignore_for_file: unused_local_variable, file_names
 
-import 'dart:ui';
 import 'package:front_end/services/api_services.dart';
 import 'package:flutter/material.dart';
 import 'package:front_end/dataBase/dbManager.dart';
 import '../modeleDEClasse/transmission.dart';
 import 'form_screen.dart';
-
+import '../widgets/_afficherDetails.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -42,122 +41,37 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-        child: Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24.0),
-          ),
-          elevation: 8.0,
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 400),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20.0,
-              vertical: 24.0,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Titre
-                  Text(
-                    "Détails : ${item.nom}",
-                    style: const TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-
-                  // Contenu structuré
-                  _buildDetailRow(
-                    "Provenance",
-                    "${item.provenance} ${item.provenanceResult != null ? '(${item.provenanceResult})' : ''}",
-                  ),
-                  _buildDetailRow("Type", item.type),
-                  if (item.type == "déposition")
-                    _buildDetailRow("Responsable", item.responsable ?? '-'),
-                  _buildDetailRow("Objet", item.details),
-                  _buildDetailRow("Quantité", "${item.quantite}"),
-                  const SizedBox(height: 12.0),
-                  _buildDetailRow("Commentaire", item.details),
-
-                  const SizedBox(height: 16.0),
-                  const Divider(height: 1, color: Colors.grey),
-                  const SizedBox(height: 12.0),
-
-                  // Statut
-                  Text(
-                    "Statut : ${item.estTerminee ? (item.type == "prêt" ? "Rendu - Terminée" : "Récupéré - Terminée") : "En cours"}",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14.0,
-                      color: item.estTerminee ? Colors.green : Colors.orange,
-                    ),
-                  ),
-
-                  const SizedBox(height: 24.0),
-
-                  // Bouton Fermer
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black87,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        "Fermer",
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      builder: (context) => TransmissionDetailsDialog(item: item),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.0,
-              color: Colors.grey[500],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4.0),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14.0,
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildDetailRow(String label, String value) {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(vertical: 8.0),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Text(
+  //           label,
+  //           style: TextStyle(
+  //             fontSize: 12.0,
+  //             color: Colors.grey[500],
+  //             fontWeight: FontWeight.w500,
+  //           ),
+  //         ),
+  //         const SizedBox(height: 4.0),
+  //         Text(
+  //           value,
+  //           style: const TextStyle(
+  //             fontSize: 14.0,
+  //             color: Colors.black87,
+  //             fontWeight: FontWeight.w500,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -298,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Text(
                             isExterne ? 'Type : externe' : 'Type : interne',
                             style: TextStyle(
-                              color: accentColor.withOpacity(0.95),
+                              color: accentColor,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

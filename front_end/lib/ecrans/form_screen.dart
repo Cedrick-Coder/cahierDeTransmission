@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../modeleDEClasse/transmission.dart';
 import 'package:intl/intl.dart';
+import 'package:front_end/constData/directionEtCaisse.dart';
 
 class FormScreen extends StatefulWidget {
   const FormScreen({super.key});
@@ -37,141 +38,11 @@ class _FormScreenState extends State<FormScreen> {
   String? selectedCaisse;
   List<String> caissesDisponibles = [];
 
-  // Données pour le choix Interne
-  final List<String> directions = [
-    "Direction Générale",
-    "Direction des Ressources Humaines",
-    "Direction Financière",
-    "Direction Technique",
-    "Direction Commerciale",
-    "Direction Logistique",
-    "Direction Comptabilité",
-    "Direction des Declarations",
-    "Direction Juriste",
-    "Direction Audit",
-    "Direction Marketing",
-    "Direction des Opération",
-    "Direction du Mutuelle de Santé",
-    "Direction du Responsable Controle Permanent",
-  ];
+  // appel des données pour direction
+  final List<String> directions = directionEtCaisse.directions;
 
-  // agence/caisse en map(data struct = map/dictionnaire)
-  final Map<String, List<String>> agencesEtCaisses = {
-    "Farimbontsoa": [
-      "67ha",
-      "Antohomadinika",
-      "Ampefiloha",
-      "Anosibe",
-      "Ankazomanga",
-      "Anosizato",
-    ],
-    "Aina": [
-      "Ambanidia",
-      "Ambohipo",
-      "Mandroseza",
-      "Andrefana",
-      "Soanierana",
-      "Andramasina",
-      "Arivonimamo",
-      "Miarinarivo",
-      "Soavinandriana",
-      "Tsiroanomandidy",
-    ],
-    "Vonjy": [
-      "Mahavoky",
-      "Andravoahangy",
-      "Ankadidramamy",
-      "Analamahitsy",
-      "Alarobia",
-      "Soarano",
-      "Avaradoha",
-    ],
-    "Rindra": [
-      "Mangamila",
-      "Ankazondandy",
-      "Ambatomena",
-      "Manjakandrina",
-      "Anjepy",
-      "Anjozorobe",
-    ],
-    "Mahasoa": [
-      "Ambohibao",
-      "Ambohidratrimo",
-      "Ivato",
-      "Ambohimanarina",
-      "Ambatolampy Tsimahafotsy",
-    ],
-    "Fanavotana": [
-      "Itaosy",
-      "Alasora",
-      "Andoharanofotsy",
-      "Ampitatafika",
-      "Imeritsiatosika",
-      "Tanjombato",
-    ],
-    "Fanantenana": [
-      "Ambositra",
-      "Fandriana",
-      "Fianarantsoa",
-      "Ambalavao"
-    ],
-    "Manoro": [
-      "Faratsiho",
-      "Betafo",
-      "Antsenakely",
-      "Ambatolampy",
-      "Behenjy"
-    ],
-    "Majunga": [
-      "Marovoay",
-      "Ambato-boeny",
-      "Manjarisoa"
-      "Tanambao sotema"
-    ],
-    "Betsiboka": [
-      "Maevatanana",
-      "Andriba"
-      "Manerinerina"
-    ],
-    "Anosy" : [
-      "Fort-Dauphin",
-      "Amboasary",
-      "Manambaro",
-      "Ambovombe",
-      "Tanambao",
-      "Tsihombe",
-      "Beloha",
-      "Bekily"
-    ],
-    "Alaotra Mangoro" : [
-      "Ambatondrazaka",
-      "Tanambe",
-      "Andaingo",
-      "Moramanga",
-      "Anjiro",
-      "Amparafara vola",
-      "Morarano Chrome"
-    ],
-    "Analanjirofo" : [
-      "Fenerive Est",
-      "Vavantenina",
-      "Maromitety",
-      "Soanierana Ivongo",
-      "Toamasina",
-      "Vatomandry",
-      "Foulpointe"
-    ],
-    "Sofia" : [
-      "Antsohihy",
-      "Befandriana Nord",
-      "Mandritsara",
-      "Bealanana",
-      "Ambatoriha"
-    ],
-
-
-
-  };
+  // appel des données pour agence et caisse
+  final Map<String, List<String>> agencesEtCaisses = directionEtCaisse.agencesEtCaisses;
 
   @override
   void dispose() {
