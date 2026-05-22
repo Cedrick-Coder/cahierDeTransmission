@@ -6,6 +6,7 @@ import '../modeleDEClasse/transmission.dart';
 import 'form_screen.dart';
 import '../widgets/_afficherDetails.dart';
 import '../widgets/carteDeTransmission.dart';
+import '../widgets/transmission_scaffold.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -122,45 +123,55 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("CAHIER DE TRANSMISSION"),
-        centerTitle: true,
-        backgroundColor: Color(0xFFDC1F3F),
-        foregroundColor: Colors.white,
-        actions: [
-          // Optionnel : bouton pour rafraîchir manuellement
-          IconButton(
-            icon: const Icon(Icons.cloud_upload),
-            onPressed: _syncAll,
-          ),
-        ],
-      ),
-      body: transmissions.isEmpty
-          ? const Center(
-              child: Text(
-                "Aucune transmission n'a été enregistrée",
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-            )
-          : ListView.builder(
-              itemCount: transmissions.length,
-              itemBuilder: (context, index) {
-                final item = transmissions[index];
-                return TransmissionCard(
-                  item: item,
-                  onDelete: () => _deleteTransmission(item),
-                  onShowDetails: () => _afficherDetails(item),
-                  onToggleStatus: () => _toggleTransmissionStatus(item),
-                );
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _ajouterTransmission,
-        backgroundColor: const Color(0xFFD49A00),
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
-      ),
+
+    return TransmissionScaffold(
+      transmissions: transmissions,
+      onSync: _syncAll,
+      onAdd: _ajouterTransmission,
+      onDelete: _deleteTransmission,
+      onShowDetails: _afficherDetails,
+      onToggleStatus: _toggleTransmissionStatus,
     );
+
+    // return Scaffold(
+    //   appBar: AppBar(
+    //     title: const Text("CAHIER DE TRANSMISSION"),
+    //     centerTitle: true,
+    //     backgroundColor: Color(0xFFDC1F3F),
+    //     foregroundColor: Colors.white,
+    //     actions: [
+    //       // Optionnel : bouton pour rafraîchir manuellement
+    //       IconButton(
+    //         icon: const Icon(Icons.cloud_upload),
+    //         onPressed: _syncAll,
+    //       ),
+    //     ],
+    //   ),
+    //   body: transmissions.isEmpty
+    //       ? const Center(
+    //           child: Text(
+    //             "Aucune transmission n'a été enregistrée",
+    //             style: TextStyle(fontSize: 18, color: Colors.grey),
+    //           ),
+    //         )
+    //       : ListView.builder(
+    //           itemCount: transmissions.length,
+    //           itemBuilder: (context, index) {
+    //             final item = transmissions[index];
+    //             return TransmissionCard(
+    //               item: item,
+    //               onDelete: () => _deleteTransmission(item),
+    //               onShowDetails: () => _afficherDetails(item),
+    //               onToggleStatus: () => _toggleTransmissionStatus(item),
+    //             );
+    //           },
+    //         ),
+    //   floatingActionButton: FloatingActionButton(
+    //     onPressed: _ajouterTransmission,
+    //     backgroundColor: const Color(0xFFD49A00),
+    //     foregroundColor: Colors.white,
+    //     child: const Icon(Icons.add),
+    //   ),
+    // );
   }
 }
