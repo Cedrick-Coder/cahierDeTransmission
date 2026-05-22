@@ -5,7 +5,6 @@ import 'package:front_end/services/transmission_repository.dart';
 import '../modeleDEClasse/transmission.dart';
 import 'form_screen.dart';
 import '../widgets/_afficherDetails.dart';
-import '../widgets/carteDeTransmission.dart';
 import '../widgets/transmission_scaffold.dart';
 
 class HomeScreen extends StatefulWidget {
