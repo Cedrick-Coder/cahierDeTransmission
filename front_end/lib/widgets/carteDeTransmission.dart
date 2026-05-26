@@ -59,7 +59,7 @@ class TransmissionCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
-              Text(isExterne ? 'Type : externe' : 'Type : interne', style: TextStyle(color: accentColor, fontWeight: FontWeight.w600)),
+              Text('Catégorie : ${item.type}', style: TextStyle(color: accentColor, fontWeight: FontWeight.w600)),
             ],
           ),
           trailing: PopupMenuButton<String>(
