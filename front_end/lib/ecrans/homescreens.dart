@@ -51,13 +51,18 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     setState(() => isSyncing = false);
 
+    String snackBarMessage;
+    if (transmissions.isEmpty) {
+      snackBarMessage = "Aucune donnée à synchroniser.";
+    } else if (syncedCount > 0) {
+      snackBarMessage = "$syncedCount transmission(s) synchronisée(s)";
+    } else {
+      snackBarMessage = "Toutes les données sont déjà synchronisées.";
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          syncedCount > 0
-              ? "$syncedCount transmission(s) synchronisée(s)"
-              : "Aucune donnée synchronisée. Vérifiez que le serveur est lancé.",
-        ),
+        content: Text(snackBarMessage),
       ),
     );
   }
@@ -86,10 +91,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   // Dropdown
                   DropdownButtonFormField<String>(
-                    value: selectedEtat,
+                    initialValue: selectedEtat,
                     items: const [
-                      DropdownMenuItem(value: 'suivi', child: Text('suivi')),
-                      DropdownMenuItem(value: 'terminer', child: Text('terminer')),
+                      DropdownMenuItem(value: 'terminer', child: Text('TERMINER')),
+                      DropdownMenuItem(value: 'suivi', child: Text('SUIVI')),
                     ],
                     onChanged: (v) {
                       if (v != null) setState(() => selectedEtat = v);
