@@ -69,29 +69,77 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _toggleTransmissionStatus(Transmission item) async {
-    final bool success = await repository.toggleStatus(item);
-    await _refreshList();
+    // Afficher un dialogue permettant de choisir l'etat et saisir une remarque
+    String selectedEtat = item.etat ?? 'suivi';
+    final TextEditingController remarqueController = TextEditingController(text: item.remarque ?? '');
 
-    if (!mounted) return;
-    if (item.serverId == null && !success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Statut mis à jour localement. Synchronisation serveur non disponible pour cet enregistrement.",
-          ),
-        ),
-      );
-      return;
-    }
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(item.type == 'prêt' ? 'Rendre' : 'Récupérer'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Dropdown
+                  DropdownButtonFormField<String>(
+                    value: selectedEtat,
+                    items: const [
+                      DropdownMenuItem(value: 'suivi', child: Text('suivi')),
+                      DropdownMenuItem(value: 'terminer', child: Text('terminer')),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setState(() => selectedEtat = v);
+                    },
+                    decoration: const InputDecoration(labelText: 'Etat'),
+                  ),
+                  const SizedBox(height: 12),
+                  // Remark textfield
+                  TextField(
+                    controller: remarqueController,
+                    maxLength: 75,
+                    decoration: const InputDecoration(labelText: 'Remarque'),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Annuler'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Validate length
+                    if (remarqueController.text.length > 75) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Remarque trop longue (75 caractères max)')));
+                      return;
+                    }
 
-    if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Statut mis à jour localement, synchronisation serveur échouée",
-          ),
-        ),
-      );
+                    // Enregistrer localement et essayer de synchroniser
+                    final success = await repository.finalizeTransmission(item, selectedEtat, remarqueController.text.trim().isEmpty ? null : remarqueController.text.trim());
+                    await _refreshList();
+                    if (!mounted) return;
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('État et remarque enregistrés.')));
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enregistré localement, synchronisation échouée.')));
+                    }
+                    Navigator.of(context).pop(true);
+                  },
+                  child: const Text('Terminé'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true) {
+      // refresh effectué après enregistrement
     }
   }
 

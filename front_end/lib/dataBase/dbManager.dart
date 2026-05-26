@@ -17,7 +17,7 @@ class DBHelper {
     String path = join(await getDatabasesPath(), "transmission.db");
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await db.execute('''
         CREATE TABLE transmissions (
@@ -33,6 +33,8 @@ class DBHelper {
           date TEXT,
           date_remise TEXT,
           estTerminee INTEGER,
+          etat TEXT,
+          remarque TEXT,
           is_synced INTEGER DEFAULT 0
         )
       ''');
@@ -52,6 +54,14 @@ class DBHelper {
             "ALTER TABLE transmissions ADD COLUMN date_remise TEXT",
           );
         }
+        if (oldVersion < 4) {
+          await db.execute(
+            "ALTER TABLE transmissions ADD COLUMN etat TEXT",
+          );
+          await db.execute(
+            "ALTER TABLE transmissions ADD COLUMN remarque TEXT",
+          );
+        }
       },
     );
   }
@@ -61,6 +71,8 @@ class DBHelper {
     var dbClient = await db;
     Map<String, dynamic> data = t.toMap();
     data['estTerminee'] = t.estTerminee ? 1 : 0;
+    data['etat'] = t.etat ?? 'suivi';
+    data['remarque'] = t.remarque;
     data['is_synced'] = t.isSynced ? 1 : 0;
     return await dbClient.insert("transmissions", data);
   }
@@ -114,6 +126,18 @@ class DBHelper {
     return await dbClient.update(
       "transmissions",
       {'estTerminee': status ? 1 : 0, 'is_synced': 0},
+      where: "id = ?",
+      whereArgs: [id],
+    );
+  }
+
+  // Mettre à jour l'etat et la remarque
+  Future<int> updateEtatRemarque(int id, String etat, String? remarque) async {
+    var dbClient = await db;
+    final int estTermineeVal = (etat == 'terminer') ? 1 : 0;
+    return await dbClient.update(
+      "transmissions",
+      {'etat': etat, 'remarque': remarque, 'estTerminee': estTermineeVal, 'is_synced': 0},
       where: "id = ?",
       whereArgs: [id],
     );

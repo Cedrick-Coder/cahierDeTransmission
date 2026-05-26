@@ -19,6 +19,8 @@ class Transmission extends Model
         'date_remise',
         'estTerminee',
         'is_synced',
+        'etat',
+        'remarque',
     ];
 
     //'date' doit être traité comme un objet(DateTime)
@@ -28,5 +30,7 @@ class Transmission extends Model
         'date_remise' => 'datetime',
         'estTerminee' => 'boolean',
         'is_synced' => 'boolean',
+        'etat' => 'string',
+        'remarque' => 'string',
     ];
 }

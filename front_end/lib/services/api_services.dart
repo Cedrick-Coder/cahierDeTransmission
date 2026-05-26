@@ -22,20 +22,26 @@ class ApiService {
           .timeout(const Duration(seconds: 30)); // Augmenté à 30 secondes
       
       if (response.statusCode == 201 || response.statusCode == 200) {
-        final body = json.decode(response.body);
-        int? serverId;
+        try {
+          final body = json.decode(response.body);
+          int? serverId;
 
-        if (body is Map<String, dynamic>) {
-          final data = body['data'];
-          if (data is Map<String, dynamic> && data['id'] is int) {
-            serverId = data['id'];
-          } else if (body['id'] is int) {
-            serverId = body['id'];
+          if (body is Map<String, dynamic>) {
+            final data = body['data'];
+            if (data is Map<String, dynamic> && data['id'] != null) {
+              serverId = data['id'] is int ? data['id'] : int.tryParse(data['id'].toString());
+            } else if (body['id'] != null) {
+              serverId = body['id'] is int ? body['id'] : int.tryParse(body['id'].toString());
+            }
           }
-        }
 
-        if (serverId != null && transmission.ID != null) {
-          await dbHelper.updateServerId(transmission.ID!, serverId);
+          if (serverId != null && transmission.ID != null) {
+            await dbHelper.updateServerId(transmission.ID!, serverId);
+            transmission.serverId = serverId;
+          }
+        } catch (_) {
+          // Si le serveur répond correctement mais sans JSON valide,
+          // on considère que l'envoi a réussi.
         }
 
         return true;
@@ -66,6 +72,8 @@ class ApiService {
           transmission.serverId!,
           {
             'estTerminee': transmission.estTerminee,
+            'etat': transmission.etat,
+            'remarque': transmission.remarque,
             'is_synced': true,
           },
         );

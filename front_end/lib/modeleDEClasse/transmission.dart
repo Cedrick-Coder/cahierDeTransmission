@@ -13,6 +13,8 @@ class Transmission {
   final DateTime date;
   final DateTime? dateRemise;
   bool estTerminee;
+  String? etat;
+  String? remarque;
   bool isSynced;
 
   // constructeur de @transmission
@@ -29,6 +31,8 @@ class Transmission {
     required this.date,
     this.dateRemise,
     this.estTerminee = false,
+    this.etat = 'suivi',
+    this.remarque,
     this.isSynced = false,
   });
 
@@ -47,6 +51,8 @@ class Transmission {
       'date': date.toIso8601String(),
       'date_remise': dateRemise?.toIso8601String(),
       'estTerminee': estTerminee,
+      'etat': etat,
+      'remarque': remarque,
       'is_synced': isSynced ? 1 : 0,
     };
   }
@@ -64,6 +70,8 @@ class Transmission {
       'date': date.toIso8601String(),
       'date_remise': dateRemise?.toIso8601String(),
       'estTerminee': estTerminee,
+      'etat': etat ?? 'suivi',
+      'remarque': remarque,
       'is_synced': isSynced,
     };
   }
@@ -85,6 +93,8 @@ class Transmission {
           ? DateTime.parse(map['date_remise'])
           : null,
       estTerminee: map['estTerminee'] == 1 || map['estTerminee'] == true,
+      etat: map['etat'] ?? map['state'] ?? 'suivi',
+      remarque: map['remarque'],
       isSynced: map['is_synced'] == 1 || map['is_synced'] == true,
     );
   }

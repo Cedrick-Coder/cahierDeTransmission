@@ -27,6 +27,8 @@ class TransmissionController extends Controller
             'date_remise'      => 'nullable|string',
             'estTerminee'      => 'boolean',
             'is_synced'        => 'boolean',
+            'etat'             => 'nullable|string',
+            'remarque'         => 'nullable|string|max:75',
         ]);
 
         if ($validator->fails()) {
@@ -81,6 +83,8 @@ class TransmissionController extends Controller
         $validator = Validator::make($request->all(), [
             'estTerminee' => 'boolean',
             'is_synced' => 'boolean',
+            'etat' => 'nullable|string',
+            'remarque' => 'nullable|string|max:75',
         ]);
 
         if ($validator->fails()) {
@@ -90,7 +94,7 @@ class TransmissionController extends Controller
             ], 400);
         }
 
-        $transmission->update($request->only(['estTerminee', 'is_synced']));
+        $transmission->update($request->only(['estTerminee', 'is_synced', 'etat', 'remarque']));
 
         return response()->json([
             'status' => 'success',

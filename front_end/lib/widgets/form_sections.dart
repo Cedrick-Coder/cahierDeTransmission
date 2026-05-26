@@ -8,27 +8,31 @@ class ProvenanceSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RadioGroup<String>(
-      groupValue: provenance,
-      onChanged: onChanged,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Provenance :",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Row(
-            children: [
-              const Text("Interne"),
-              Radio<String>(value: "interne"),
-              const SizedBox(width: 12),
-              const Text("Externe"),
-              Radio<String>(value: "externe"),
-            ],
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Provenance :",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        Row(
+          children: [
+            const Text("Interne"),
+            Radio<String>(
+              value: "interne",
+              groupValue: provenance,
+              onChanged: onChanged,
+            ),
+            const SizedBox(width: 12),
+            const Text("Externe"),
+            Radio<String>(
+              value: "externe",
+              groupValue: provenance,
+              onChanged: onChanged,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -148,27 +152,31 @@ class TypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RadioGroup<String>(
-      groupValue: type,
-      onChanged: onChanged,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Type de mouvement :",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Row(
-            children: [
-              const Text("Prêt"),
-              Radio<String>(value: "prêt"),
-              const SizedBox(width: 12),
-              const Text("Déposition"),
-              Radio<String>(value: "déposition"),
-            ],
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Type de mouvement :",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        Row(
+          children: [
+            const Text("Prêt"),
+            Radio<String>(
+              value: "prêt",
+              groupValue: type,
+              onChanged: onChanged,
+            ),
+            const SizedBox(width: 12),
+            const Text("Déposition"),
+            Radio<String>(
+              value: "déposition",
+              groupValue: type,
+              onChanged: onChanged,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

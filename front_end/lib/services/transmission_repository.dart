@@ -17,6 +17,7 @@ class TransmissionRepository {
     transmission.ID = localId;
     final success = await ApiService.envoyerAuServeur(transmission);
     if (success) {
+      transmission.isSynced = true;
       await dbHelper.markAsSynced(localId);
     }
     return success;
@@ -41,5 +42,34 @@ class TransmissionRepository {
     }
 
     return success;
+  }
+
+  Future<bool> finalizeTransmission(Transmission item, String etat, String? remarque) async {
+    if (item.ID == null) return false;
+
+    // Update local DB
+    await dbHelper.updateEtatRemarque(item.ID!, etat, remarque);
+
+    // If there is a server id, try to update remote
+    if (item.serverId != null) {
+      final success = await ApiService.updateTransmissionOnServer(
+        item.serverId!,
+        {
+          'etat': etat,
+          'remarque': remarque,
+          'estTerminee': etat == 'terminer',
+          'is_synced': true,
+        },
+      );
+
+      if (success) {
+        await dbHelper.markAsSynced(item.ID!);
+      }
+
+      return success;
+    }
+
+    // If not on server yet, return true (saved locally)
+    return true;
   }
 }

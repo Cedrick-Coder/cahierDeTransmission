@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../modeleDEClasse/transmission.dart';
-import 'carteDeTransmission.dart'; // Ajustez le chemin si nécessaire
+import 'carteDeTransmission.dart'; 
 
 class TransmissionScaffold extends StatelessWidget {
   final List<Transmission> transmissions;

@@ -44,6 +44,9 @@ class TransmissionDetailsDialog extends StatelessWidget {
                     color: item.estTerminee ? Colors.green : Colors.orange,
                   ),
                 ),
+                const SizedBox(height: 8.0),
+                if (item.etat != null) _buildDetailRow('Etat', item.etat!),
+                if (item.remarque != null && item.remarque!.isNotEmpty) _buildDetailRow('Remarque', item.remarque!),
                 const SizedBox(height: 24.0),
                 SizedBox(
                   width: double.infinity,
