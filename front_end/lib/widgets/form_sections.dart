@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 class ProvenanceSelector extends StatelessWidget {
   final String provenance;
   final ValueChanged<String?> onChanged;
-
   const ProvenanceSelector({super.key, required this.provenance, required this.onChanged});
 
   @override
@@ -15,22 +14,22 @@ class ProvenanceSelector extends StatelessWidget {
           "Provenance :",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        Row(
-          children: [
-            const Text("Interne"),
-            Radio<String>(
-              value: "interne",
-              groupValue: provenance,
-              onChanged: onChanged,
-            ),
-            const SizedBox(width: 12),
-            const Text("Externe"),
-            Radio<String>(
-              value: "externe",
-              groupValue: provenance,
-              onChanged: onChanged,
-            ),
-          ],
+        RadioGroup<String>(
+          groupValue: provenance,
+          onChanged: onChanged,
+          child: Row(
+            children: [
+              const Text("Interne"),
+              Radio<String>(
+                value: "interne",
+              ),
+              const SizedBox(width: 12),
+              const Text("Externe"),
+              Radio<String>(
+                value: "externe",
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -95,7 +94,7 @@ class AgenceCaisseSelector extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: DropdownButtonFormField<String>(
+            child: DropdownButtonFormField<String>(
             initialValue: selectedAgence,
             decoration: const InputDecoration(
               labelText: "Agence",
@@ -159,22 +158,22 @@ class TypeSelector extends StatelessWidget {
           "Type de mouvement :",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        Row(
-          children: [
-            const Text("Prêt"),
-            Radio<String>(
-              value: "prêt",
-              groupValue: type,
-              onChanged: onChanged,
-            ),
-            const SizedBox(width: 12),
-            const Text("Déposition"),
-            Radio<String>(
-              value: "déposition",
-              groupValue: type,
-              onChanged: onChanged,
-            ),
-          ],
+        RadioGroup<String>(
+          groupValue: type,
+          onChanged: onChanged,
+          child: Row(
+            children: [
+              const Text("Prêt"),
+              Radio<String>(
+                value: "prêt",
+              ),
+              const SizedBox(width: 12),
+              const Text("Déposition"),
+              Radio<String>(
+                value: "déposition",
+              ),
+            ],
+          ),
         ),
       ],
     );
