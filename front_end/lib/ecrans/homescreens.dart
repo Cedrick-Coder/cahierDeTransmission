@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:front_end/services/transmission_repository.dart';
-import 'package:front_end/widgets/transmission_filter_dialog.dart';
 import '../modeleDEClasse/transmission.dart';
 import 'form_screen.dart';
 import '../widgets/_afficherDetails.dart';
@@ -18,13 +17,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TransmissionRepository repository = TransmissionRepository();
   List<Transmission> transmissions = [];
-  List<Transmission> filteredTransmissions = [];
   bool isSyncing = false;
-  
-  // Variables pour stocker les filtres actifs
-  DateTime? filterDate;
-  String? filterType;
-  String? filterCategory;
 
   @override
   void initState() {
@@ -37,36 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     setState(() {
       transmissions = data;
-      _applyFilters();
     });
-  }
-
-  /// Applique les filtres actuels aux transmissions
-  void _applyFilters() {
-    filteredTransmissions = TransmissionFilterDialog.filterTransmissions(
-      transmissions,
-      filterDate: filterDate,
-      filterType: filterType,
-      filterCategory: filterCategory,
-    );
-  }
-
-  /// Ouvre le dialogue de filtrage
-  Future<void> _openFilterDialog() async {
-    final result = await TransmissionFilterDialog(context: context).show(
-      filterDate,
-      filterType,
-      filterCategory,
-    );
-
-    if (result != null) {
-      setState(() {
-        filterDate = result['date'];
-        filterType = result['type'];
-        filterCategory = result['category'];
-        _applyFilters();
-      });
-    }
   }
 
   void _afficherDetails(Transmission item) {
@@ -213,10 +177,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
 
     return TransmissionScaffold(
-      transmissions: filteredTransmissions,
+      transmissions: transmissions,
       onSync: _syncAll,
       onAdd: _ajouterTransmission,
-      onFilter: _openFilterDialog,
       onDelete: _deleteTransmission,
       onShowDetails: _afficherDetails,
       onToggleStatus: _toggleTransmissionStatus,
