@@ -210,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
 
     return TransmissionScaffold(
-      transmissions: transmissions,
+      transmissions: filteredTransmissions,
       onSync: _syncAll,
       onAdd: _ajouterTransmission,
       onFilter: _openFilterDialog,

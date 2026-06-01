@@ -142,7 +142,7 @@ class _FilterDialogContentState extends State<_FilterDialogContent> {
           children: [
             // Filtre par date
             const Text(
-              'Date',
+              'Date de création',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             const SizedBox(height: 8),
