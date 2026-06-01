@@ -37,7 +37,7 @@ class _TransmissionFinalizeDialogState extends State<TransmissionFinalizeDialog>
         mainAxisSize: MainAxisSize.min,
         children: [
           DropdownButtonFormField<String>(
-            value: selectedEtat,
+            initialValue: selectedEtat,
             items: const [
               DropdownMenuItem(value: 'terminer', child: Text('TERMINER')),
               DropdownMenuItem(value: 'suivi', child: Text('SUIVI')),

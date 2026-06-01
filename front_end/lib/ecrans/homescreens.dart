@@ -109,8 +109,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _toggleTransmissionStatus(Transmission item) async {
     // Afficher un dialogue permettant de choisir l'etat et saisir une remarque
-    String selectedEtat = item.etat ?? 'suivi';
-    final TextEditingController remarqueController = TextEditingController(text: item.remarque ?? '');
+    // String selectedEtat = item.etat ?? 'suivi';
+    // final TextEditingController remarqueController = TextEditingController(text: item.remarque ?? '');
 
     final result = await showDialog<bool>(
       context: context,
