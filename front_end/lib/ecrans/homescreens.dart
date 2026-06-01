@@ -6,6 +6,7 @@ import '../modeleDEClasse/transmission.dart';
 import 'form_screen.dart';
 import '../widgets/_afficherDetails.dart';
 import '../widgets/transmission_scaffold.dart';
+import 'package:front_end/widgets/transmission_filter_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +18,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TransmissionRepository repository = TransmissionRepository();
   List<Transmission> transmissions = [];
+  List<Transmission> filteredTransmissions = [];
+
+  DateTime? filterDate;
+  String? filterType;
+  String? filterCategory;
   bool isSyncing = false;
 
   @override
@@ -30,7 +36,34 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     setState(() {
       transmissions = data;
+      _applyFilters();
     });
+  }
+
+  void _applyFilters() {
+    filteredTransmissions = TransmissionFilterDialog.filterTransmissions(
+      transmissions,
+      filterDate: filterDate,
+      filterType: filterType,
+      filterCategory: filterCategory,
+    );
+  }
+
+  Future<void> _openFilterDialog() async {
+    final result = await TransmissionFilterDialog(context: context).show(
+      filterDate,
+      filterType,
+      filterCategory,
+    );
+
+    if (result != null) {
+      setState(() {
+        filterDate = result['date'];
+        filterType = result['type'];
+        filterCategory = result['category'];
+        _applyFilters();
+      });
+    }
   }
 
   void _afficherDetails(Transmission item) {
@@ -180,6 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
       transmissions: transmissions,
       onSync: _syncAll,
       onAdd: _ajouterTransmission,
+      onFilter: _openFilterDialog,
       onDelete: _deleteTransmission,
       onShowDetails: _afficherDetails,
       onToggleStatus: _toggleTransmissionStatus,

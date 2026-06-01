@@ -6,6 +6,7 @@ class TransmissionScaffold extends StatelessWidget {
   final List<Transmission> transmissions;
   final VoidCallback onSync;
   final VoidCallback onAdd;
+  final VoidCallback onFilter;
   final Function(Transmission) onDelete;
   final Function(Transmission) onShowDetails;
   final Function(Transmission) onToggleStatus;
@@ -15,6 +16,7 @@ class TransmissionScaffold extends StatelessWidget {
     required this.transmissions,
     required this.onSync,
     required this.onAdd,
+    required this.onFilter,
     required this.onDelete,
     required this.onShowDetails,
     required this.onToggleStatus,
@@ -31,7 +33,13 @@ class TransmissionScaffold extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.cloud_upload),
-            onPressed: onSync,
+            onPressed: onSync, 
+
+          ),
+          IconButton(
+            icon: const Icon(Icons.tune),
+            onPressed: onFilter,
+            tooltip: 'Filtrer',
           ),
         ],
       ),
