@@ -30,7 +30,7 @@ class TransmissionDetailsDialog extends StatelessWidget {
                 _buildDetailRow("Provenance", "${item.provenance} ${item.provenanceResult != null ? '(${item.provenanceResult})' : ''}"),
                 _buildDetailRow("Type", item.type),
                 if (item.type == "déposition") _buildDetailRow("Responsable", item.responsable ?? '-'),
-                _buildDetailRow("Objet", item.details),
+                _buildDetailRow("Objet", _objetDisplay(item)),
                 _buildDetailRow("Quantité", "${item.quantite}"),
                 const SizedBox(height: 12.0),
                 _buildDetailRow("Commentaire", item.details),
@@ -65,6 +65,19 @@ class TransmissionDetailsDialog extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _objetDisplay(Transmission item) {
+    try {
+      final obj = item.objet;
+      if (obj == null) return '-';
+      if (obj is Map) {
+        return obj['nom']?.toString() ?? obj.toString();
+      }
+      return obj.toString();
+    } catch (_) {
+      return '-';
+    }
   }
 
   Widget _buildDetailRow(String label, String value) {

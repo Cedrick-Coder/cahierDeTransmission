@@ -21,6 +21,7 @@ class Transmission extends Model
         'is_synced',
         'etat',
         'remarque',
+        'objet',
     ];
 
     //'date' doit être traité comme un objet(DateTime)
@@ -32,5 +33,6 @@ class Transmission extends Model
         'is_synced' => 'boolean',
         'etat' => 'string',
         'remarque' => 'string',
+        'objet' => 'json',
     ];
 }

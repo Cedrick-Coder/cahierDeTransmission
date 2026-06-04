@@ -1,4 +1,5 @@
 // ignore_for_file: non_constant_identifier_names, camel_case_types
+import 'dart:convert';
 
 class Transmission {
   int? ID;
@@ -15,6 +16,7 @@ class Transmission {
   bool estTerminee;
   String? etat;
   String? remarque;
+  Map<String, dynamic>? objet;
   bool isSynced;
 
   // constructeur de @transmission
@@ -33,6 +35,7 @@ class Transmission {
     this.estTerminee = false,
     this.etat = 'suivi',
     this.remarque,
+    this.objet,
     this.isSynced = false,
   });
 
@@ -53,6 +56,7 @@ class Transmission {
       'estTerminee': estTerminee,
       'etat': etat,
       'remarque': remarque,
+      'objet': objet != null ? jsonEncode(objet) : null,
       'is_synced': isSynced ? 1 : 0,
     };
   }
@@ -72,6 +76,7 @@ class Transmission {
       'estTerminee': estTerminee,
       'etat': etat ?? 'suivi',
       'remarque': remarque,
+      'objet': objet,
       'is_synced': isSynced,
     };
   }
@@ -95,6 +100,7 @@ class Transmission {
       estTerminee: map['estTerminee'] == 1 || map['estTerminee'] == true,
       etat: map['etat'] ?? map['state'] ?? 'suivi',
       remarque: map['remarque'],
+      objet: map['objet'] != null ? json.decode(map['objet']) : null,
       isSynced: map['is_synced'] == 1 || map['is_synced'] == true,
     );
   }

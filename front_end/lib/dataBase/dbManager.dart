@@ -17,7 +17,7 @@ class DBHelper {
     String path = join(await getDatabasesPath(), "transmission.db");
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: (db, version) async {
         await db.execute('''
         CREATE TABLE transmissions (
@@ -35,6 +35,7 @@ class DBHelper {
           estTerminee INTEGER,
           etat TEXT,
           remarque TEXT,
+          objet TEXT,
           is_synced INTEGER DEFAULT 0
         )
       ''');
@@ -60,6 +61,11 @@ class DBHelper {
           );
           await db.execute(
             "ALTER TABLE transmissions ADD COLUMN remarque TEXT",
+          );
+        }
+        if (oldVersion < 5) {
+          await db.execute(
+            "ALTER TABLE transmissions ADD COLUMN objet TEXT",
           );
         }
       },

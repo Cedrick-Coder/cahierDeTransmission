@@ -282,6 +282,9 @@ class _FormScreenState extends State<FormScreen> {
                             : null,
                         quantite: int.parse(_quantiteController.text),
                         details: _detailsController.text,
+                        objet: {
+                          'nom': _objetController.text,
+                        },
                         date: _dateFixe,
                         dateRemise: type == "prêt" ? selectedRemiseDate : null,
                       );
