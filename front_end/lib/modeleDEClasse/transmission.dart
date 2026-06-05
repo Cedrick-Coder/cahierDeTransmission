@@ -10,7 +10,7 @@ class Transmission {
   final String type;
   final String? responsable;
   final int quantite;
-  final String details;
+  final String? details;
   final DateTime date;
   final DateTime? dateRemise;
   bool estTerminee;
@@ -29,7 +29,7 @@ class Transmission {
     required this.type,
     this.responsable,
     required this.quantite,
-    required this.details,
+    this.details,
     required this.date,
     this.dateRemise,
     this.estTerminee = false,
@@ -70,7 +70,7 @@ class Transmission {
       'type': type,
       'responsable': responsable,
       'quantite': quantite,
-      'details': details,
+      'details': (details == null || details!.trim().isEmpty) ? "Aucun détail fourni" : details,
       'date': date.toIso8601String(),
       'date_remise': dateRemise?.toIso8601String(),
       'estTerminee': estTerminee,

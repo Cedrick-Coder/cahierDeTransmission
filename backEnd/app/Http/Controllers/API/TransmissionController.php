@@ -22,13 +22,14 @@ class TransmissionController extends Controller
             'type'             => 'required|string',
             'responsable'      => 'nullable|string',
             'quantite'         => 'required|integer',
-            'details'          => 'required|string',
-            'date'             => 'required|string', // Accepter comme string et laisser Eloquent parser
+            'details'          => 'nullable|string',
+            'date'             => 'required|string', 
             'date_remise'      => 'nullable|string',
             'estTerminee'      => 'boolean',
             'is_synced'        => 'boolean',
             'etat'             => 'nullable|string',
             'remarque'         => 'nullable|string|max:75',
+            'objet'            => 'nullable',
         ]);
 
         if ($validator->fails()) {

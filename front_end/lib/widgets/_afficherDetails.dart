@@ -33,7 +33,7 @@ class TransmissionDetailsDialog extends StatelessWidget {
                 _buildDetailRow("Objet", _objetDisplay(item)),
                 _buildDetailRow("Quantité", "${item.quantite}"),
                 const SizedBox(height: 12.0),
-                _buildDetailRow("Commentaire", item.details),
+                _buildDetailRow("Commentaire", item.details ??"Non spécifié"),
                 const SizedBox(height: 16.0),
                 const Divider(height: 1, color: Colors.grey),
                 const SizedBox(height: 12.0),
