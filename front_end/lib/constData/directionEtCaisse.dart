@@ -61,6 +61,7 @@ class directionEtCaisse {
       "Ambohimanarina",
       "Ambatolampy Tsimahafotsy",
     ],
+    
     "Fanavotana": [
       "Itaosy",
       "Alasora",
