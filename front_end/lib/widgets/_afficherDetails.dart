@@ -72,7 +72,7 @@ class TransmissionDetailsDialog extends StatelessWidget {
       final obj = item.objet;
       if (obj == null) return '-';
       return obj['nom']?.toString() ?? obj.toString();
-          return obj.toString();
+          // return obj.toString();
     } catch (_) {
       return '-';
     }
