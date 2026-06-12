@@ -9,6 +9,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.hardware.usb.UsbConstants
 import android.hardware.usb.UsbDevice
+import android.hardware.usb.UsbDeviceConnection
+import android.hardware.usb.UsbInterface
 import android.hardware.usb.UsbManager
 import android.os.Build
 import android.util.Base64
@@ -40,6 +42,8 @@ class BiometricService(private val activity: Activity) {
     private var lastZKError: String? = null
     private var isNativeLibrariesLoaded = false
     private var usbPermissionGranted = false
+    private var usbDeviceConnection: UsbDeviceConnection? = null
+    private var usbInterface: UsbInterface? = null
     private val apiService = BiometricApiService()
 
     init {
@@ -116,6 +120,59 @@ class BiometricService(private val activity: Activity) {
             Log.e(TAG, lastZKError!!)
         }
         return requestResult
+    }
+
+    private fun openUsbDeviceViaFileDescriptor(): Boolean {
+        try {
+            val usbManager = activity.getSystemService(Context.USB_SERVICE) as UsbManager
+            val usbDevice = findUsbDevice(usbManager) ?: run {
+                lastZKError = "Aucun périphérique USB trouvé"
+                Log.e(TAG, lastZKError!!)
+                return false
+            }
+
+            if (!usbManager.hasPermission(usbDevice)) {
+                lastZKError = "Permission USB nécessaire pour le périphérique"
+                Log.e(TAG, lastZKError!!)
+                return false
+            }
+
+            if (usbDeviceConnection == null) {
+                usbDeviceConnection = usbManager.openDevice(usbDevice)
+                if (usbDeviceConnection == null) {
+                    lastZKError = "Impossible d'ouvrir la connexion USB via UsbManager"
+                    Log.e(TAG, lastZKError!!)
+                    return false
+                }
+            }
+
+            if (usbInterface == null) {
+                val interface0 = usbDevice.getInterface(0)
+                if (interface0 == null) {
+                    lastZKError = "Aucune interface USB valide trouvée"
+                    Log.e(TAG, lastZKError!!)
+                    return false
+                }
+                if (!usbDeviceConnection!!.claimInterface(interface0, true)) {
+                    lastZKError = "Impossible de réclamer l'interface USB"
+                    Log.e(TAG, lastZKError!!)
+                    return false
+                }
+                usbInterface = interface0
+            }
+
+            if (usbDeviceConnection?.fileDescriptor ?: -1 <= 0) {
+                lastZKError = "File descriptor USB invalide"
+                Log.e(TAG, lastZKError!!)
+                return false
+            }
+
+            return true
+        } catch (e: Exception) {
+            lastZKError = "Erreur d'ouverture USB: ${e.message}"
+            Log.e(TAG, lastZKError!!)
+            return false
+        }
     }
 
     private suspend fun requestUsbPermissionForDevice(usbManager: UsbManager, usbDevice: UsbDevice): Boolean {
@@ -281,6 +338,9 @@ class BiometricService(private val activity: Activity) {
                 Log.e(TAG, lastZKError!!)
                 return false
             }
+            if (!openUsbDeviceViaFileDescriptor()) {
+                return false
+            }
             if (FingerprintSensorEx.Init() != FingerprintSensorErrorCode.ZKFP_ERR_OK) {
                 lastZKError = "Initialisation ZKTeco échouée"
                 Log.e(TAG, lastZKError!!)
@@ -294,9 +354,16 @@ class BiometricService(private val activity: Activity) {
                 return false
             }
 
-            mhDevice = FingerprintSensorEx.OpenDevice(0)
+            val fileDescriptor = usbDeviceConnection?.fileDescriptor ?: 0
+            if (fileDescriptor <= 0) {
+                lastZKError = "Impossible de récupérer le file descriptor USB"
+                Log.e(TAG, lastZKError!!)
+                return false
+            }
+
+            mhDevice = FingerprintSensorEx.OpenDevice(fileDescriptor)
             if (mhDevice == 0L) {
-                lastZKError = "Impossible d'ouvrir le lecteur ZKTeco 9500"
+                lastZKError = "Impossible d'ouvrir le lecteur ZKTeco 9500 avec le file descriptor"
                 Log.e(TAG, lastZKError!!)
                 return false
             }
@@ -363,6 +430,15 @@ class BiometricService(private val activity: Activity) {
         } finally {
             zktecoDeviceOpened = false
             imgbuf = null
+            usbInterface?.let {
+                try {
+                    usbDeviceConnection?.releaseInterface(it)
+                } catch (ignored: Exception) {
+                }
+            }
+            usbDeviceConnection?.close()
+            usbDeviceConnection = null
+            usbInterface = null
         }
     }
 
