@@ -71,10 +71,8 @@ class TransmissionDetailsDialog extends StatelessWidget {
     try {
       final obj = item.objet;
       if (obj == null) return '-';
-      if (obj is Map) {
-        return obj['nom']?.toString() ?? obj.toString();
-      }
-      return obj.toString();
+      return obj['nom']?.toString() ?? obj.toString();
+          return obj.toString();
     } catch (_) {
       return '-';
     }

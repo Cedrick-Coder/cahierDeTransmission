@@ -9,4 +9,5 @@ Route::post('/sync', [TransmissionController::class, 'store']);
 Route::put('/transmissions/{id}', [TransmissionController::class, 'update']);
 
 Route::post('/personne-autorisee', [PersonneAutoriseeController::class, 'store']);
+Route::get('/personne-autorisee/biometrics', [PersonneAutoriseeController::class, 'biometrics']);
  

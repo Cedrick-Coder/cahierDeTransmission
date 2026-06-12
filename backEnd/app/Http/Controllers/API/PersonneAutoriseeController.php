@@ -44,4 +44,21 @@ class PersonneAutoriseeController extends Controller
             ], 500);
         }
     }
+
+    public function biometrics()
+    {
+        try {
+            $biometrics = PersonneAutorisee::select('biomData')
+                ->whereNotNull('biomData')
+                ->get();
+
+            return response()->json($biometrics, 200);
+        } catch (\Exception $e) {
+            Log::error('Erreur récupération biométrie', ['error' => $e->getMessage()]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Impossible de récupérer les données biométriques'
+            ], 500);
+        }
+    }
 }

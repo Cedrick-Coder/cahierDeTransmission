@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../modeleDEClasse/transmission.dart';
 import 'package:front_end/services/transmission_repository.dart';
+import 'biometric_identification_dialog.dart';
 
 class TransmissionFinalizeDialog extends StatefulWidget {
   final Transmission item;
@@ -60,30 +61,71 @@ class _TransmissionFinalizeDialogState extends State<TransmissionFinalizeDialog>
           onPressed: () => Navigator.of(context).pop(false),
           child: const Text('Annuler'),
         ),
-        ElevatedButton(
-          onPressed: () async {
-            if (remarqueController.text.length > 75) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Remarque trop longue (75 caractères max)')));
-              return;
-            }
+        if (selectedEtat == 'suivi')
+          ElevatedButton(
+            onPressed: () async {
+              if (remarqueController.text.length > 75) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Remarque trop longue (75 caractères max)')));
+                return;
+              }
 
-            final success = await widget.repository.finalizeTransmission(
-              widget.item,
-              selectedEtat,
-              remarqueController.text.trim().isEmpty ? null : remarqueController.text.trim(),
-            );
+              final success = await widget.repository.finalizeTransmission(
+                widget.item,
+                selectedEtat,
+                remarqueController.text.trim().isEmpty ? null : remarqueController.text.trim(),
+              );
 
-            if (!mounted) return;
-            if (success) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('État et remarque enregistrés.')));
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enregistré localement, synchronisation échouée.')));
-            }
+              if (!mounted) return;
+              if (success) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('État et remarque enregistrés.')));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enregistré localement, synchronisation échouée.')));
+              }
 
-            Navigator.of(context).pop(true);
-          },
-          child: const Text('Terminé'),
-        ),
+              Navigator.of(context).pop(true);
+            },
+            child: const Text('Terminé'),
+          ),
+        if (selectedEtat == 'terminer')
+          ElevatedButton(
+            onPressed: () async {
+              if (remarqueController.text.length > 75) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Remarque trop longue (75 caractères max)')));
+                return;
+              }
+
+              // Open biometric identification dialog
+              final biometricSuccess = await showDialog<bool>(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const BiometricIdentificationDialog(),
+              ) ?? false;
+
+              if (!mounted) return;
+
+              if (biometricSuccess) {
+                // Biometric identification successful, proceed with finalization
+                final success = await widget.repository.finalizeTransmission(
+                  widget.item,
+                  selectedEtat,
+                  remarqueController.text.trim().isEmpty ? null : remarqueController.text.trim(),
+                );
+
+                if (!mounted) return;
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('État et remarque enregistrés.')));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enregistré localement, synchronisation échouée.')));
+                }
+
+                Navigator.of(context).pop(true);
+              } else {
+                // Biometric identification failed
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Identification biométrique échouée. Opération annulée.')));
+              }
+            },
+            child: const Text('Suivant'),
+          ),
       ],
     );
   }
