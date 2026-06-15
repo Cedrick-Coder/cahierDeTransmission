@@ -4,9 +4,9 @@ import java.awt.Color;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
+// import java.net.URI;
+// import java.net.http.HttpClient;
+// import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import javax.swing.ImageIcon;
