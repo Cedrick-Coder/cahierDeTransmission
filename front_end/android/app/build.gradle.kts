@@ -1,3 +1,5 @@
+import java.io.File
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -48,6 +50,24 @@ android {
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 }
+
+// Ensure native dependency SONAMEs are available: duplicate libzkalg12.so -> libzkalg.so
+tasks.register("duplicateZkAlg") {
+    doLast {
+        val jniDir = file("src/main/jniLibs")
+        if (jniDir.exists()) {
+            jniDir.walkTopDown().filter { it.isFile && it.name == "libzkalg12.so" }.forEach { src ->
+                val dest = src.parentFile.toPath().resolve("libzkalg.so").toFile()
+                if (!dest.exists()) {
+                    src.copyTo(dest, overwrite = true)
+                    println("Created ${dest.absolutePath} from ${src.absolutePath}")
+                }
+            }
+        }
+    }
+}
+
+tasks.named("preBuild") { dependsOn("duplicateZkAlg") }
 
 flutter {
     source = "../.."

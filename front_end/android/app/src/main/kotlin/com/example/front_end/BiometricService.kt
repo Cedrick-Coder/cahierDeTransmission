@@ -9,15 +9,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.hardware.usb.UsbConstants
 import android.hardware.usb.UsbDevice
-import android.hardware.usb.UsbDeviceConnection
-import android.hardware.usb.UsbInterface
 import android.hardware.usb.UsbManager
 import android.os.Build
 import android.util.Base64
 import android.util.Log
-import com.zkteco.biometric.FingerprintSensorErrorCode
-import com.zkteco.biometric.FingerprintSensorEx
-import kotlin.math.abs
+import com.example.front_end.ZKTecoBiometricManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
@@ -33,17 +29,11 @@ class BiometricService(private val activity: Activity) {
 
     // Store biometric records as Base64 strings (as received from backend)
     private var biometricDataInMemoryBase64: List<String> = emptyList()
+    private val zktecoManager = ZKTecoBiometricManager(activity.applicationContext)
     private var zktecoDeviceOpened: Boolean = false
-    private var mhDevice: Long = 0
-    private var mhDB: Long = 0
-    private var fpWidth = 0
-    private var fpHeight = 0
-    private var imgbuf: ByteArray? = null
     private var lastZKError: String? = null
     private var isNativeLibrariesLoaded = false
     private var usbPermissionGranted = false
-    private var usbDeviceConnection: UsbDeviceConnection? = null
-    private var usbInterface: UsbInterface? = null
     private val apiService = BiometricApiService()
 
     init {
@@ -54,24 +44,16 @@ class BiometricService(private val activity: Activity) {
         if (isNativeLibrariesLoaded) return true
 
         return try {
-            System.loadLibrary("zksensorcore")
-            System.loadLibrary("zkalg12")
-            System.loadLibrary("zkfinger10")
-            System.loadLibrary("slkidcap")
-
-            if (!FingerprintSensorEx.isNativeLoaded()) {
+            val loaded = ZKTecoBiometricManager.loadNativeLibraries()
+            if (!loaded) {
                 lastZKError = "Les bibliothèques natives ZKTeco n'ont pas pu être chargées"
                 Log.e(TAG, lastZKError!!)
                 false
             } else {
                 isNativeLibrariesLoaded = true
-                Log.d(TAG, "Native ZKTeco libraries loaded into memory")
+                Log.d(TAG, "Native ZKTeco libraries loaded successfully")
                 true
             }
-        } catch (e: UnsatisfiedLinkError) {
-            lastZKError = "Chargement des bibliothèques natives échoué: ${e.message}"
-            Log.e(TAG, lastZKError!!)
-            false
         } catch (e: Exception) {
             lastZKError = "Erreur lors du chargement des bibliothèques natives: ${e.message}"
             Log.e(TAG, lastZKError!!)
@@ -91,26 +73,27 @@ class BiometricService(private val activity: Activity) {
     }
 
     suspend fun requestUsbPermission(): Boolean {
-        if (usbPermissionGranted) {
-            Log.d(TAG, "Permission USB déjà accordée")
-            return true
-        }
-
         val usbManager = activity.getSystemService(Context.USB_SERVICE) as UsbManager
         val usbDevice = findUsbDevice(usbManager)
 
         if (usbDevice == null) {
             lastZKError = "Aucun périphérique USB trouvé"
             Log.e(TAG, lastZKError!!)
+            usbPermissionGranted = false
             return false
         }
 
+        // Always recheck permission validity, even if flag was previously true
+        // (device may have been disconnected/reconnected, permission may have expired)
         if (usbManager.hasPermission(usbDevice)) {
             usbPermissionGranted = true
             Log.d(TAG, "USB permission already granted for ${usbDevice.deviceName}")
             return true
         }
 
+        // Permission not granted, request it
+        usbPermissionGranted = false
+        Log.d(TAG, "Permission USB not found, requesting for ${usbDevice.deviceName}")
         val requestResult = requestUsbPermissionForDevice(usbManager, usbDevice)
         if (requestResult) {
             usbPermissionGranted = true
@@ -118,61 +101,9 @@ class BiometricService(private val activity: Activity) {
         } else {
             lastZKError = "Permission USB refusée"
             Log.e(TAG, lastZKError!!)
+            usbPermissionGranted = false
         }
         return requestResult
-    }
-
-    private fun openUsbDeviceViaFileDescriptor(): Boolean {
-        try {
-            val usbManager = activity.getSystemService(Context.USB_SERVICE) as UsbManager
-            val usbDevice = findUsbDevice(usbManager) ?: run {
-                lastZKError = "Aucun périphérique USB trouvé"
-                Log.e(TAG, lastZKError!!)
-                return false
-            }
-
-            if (!usbManager.hasPermission(usbDevice)) {
-                lastZKError = "Permission USB nécessaire pour le périphérique"
-                Log.e(TAG, lastZKError!!)
-                return false
-            }
-
-            if (usbDeviceConnection == null) {
-                usbDeviceConnection = usbManager.openDevice(usbDevice)
-                if (usbDeviceConnection == null) {
-                    lastZKError = "Impossible d'ouvrir la connexion USB via UsbManager"
-                    Log.e(TAG, lastZKError!!)
-                    return false
-                }
-            }
-
-            if (usbInterface == null) {
-                val interface0 = usbDevice.getInterface(0)
-                if (interface0 == null) {
-                    lastZKError = "Aucune interface USB valide trouvée"
-                    Log.e(TAG, lastZKError!!)
-                    return false
-                }
-                if (!usbDeviceConnection!!.claimInterface(interface0, true)) {
-                    lastZKError = "Impossible de réclamer l'interface USB"
-                    Log.e(TAG, lastZKError!!)
-                    return false
-                }
-                usbInterface = interface0
-            }
-
-            if (usbDeviceConnection?.fileDescriptor ?: -1 <= 0) {
-                lastZKError = "File descriptor USB invalide"
-                Log.e(TAG, lastZKError!!)
-                return false
-            }
-
-            return true
-        } catch (e: Exception) {
-            lastZKError = "Erreur d'ouverture USB: ${e.message}"
-            Log.e(TAG, lastZKError!!)
-            return false
-        }
     }
 
     private suspend fun requestUsbPermissionForDevice(usbManager: UsbManager, usbDevice: UsbDevice): Boolean {
@@ -328,87 +259,32 @@ class BiometricService(private val activity: Activity) {
 
         return try {
             if (zktecoDeviceOpened) {
-                Log.d(TAG, "ZKTeco 9500 device already initialized")
+                Log.d(TAG, "ZKTeco device already initialized")
                 return true
             }
 
-            Log.d(TAG, "Opening ZKTeco 9500 device...")
-            if (!FingerprintSensorEx.isNativeLoaded()) {
-                lastZKError = "Bibliothèques ZKTeco manquantes ou non chargées"
-                Log.e(TAG, lastZKError!!)
-                return false
-            }
-            if (!openUsbDeviceViaFileDescriptor()) {
-                return false
-            }
-            if (FingerprintSensorEx.Init() != FingerprintSensorErrorCode.ZKFP_ERR_OK) {
-                lastZKError = "Initialisation ZKTeco échouée"
+            val usbManager = activity.getSystemService(Context.USB_SERVICE) as UsbManager
+            val usbDevice = findUsbDevice(usbManager)
+            if (usbDevice == null) {
+                lastZKError = "Aucun périphérique USB ZKTeco trouvé"
                 Log.e(TAG, lastZKError!!)
                 return false
             }
 
-            val deviceCount = FingerprintSensorEx.GetDeviceCount()
-            if (deviceCount <= 0) {
-                lastZKError = "Aucun appareil ZKTeco détecté"
+            Log.d(TAG, "Opening ZKTeco device via Java manager...")
+            if (!zktecoManager.openDevice(usbDevice)) {
+                lastZKError = zktecoManager.getLastError() ?: "Impossible d'ouvrir le périphérique ZKTeco"
                 Log.e(TAG, lastZKError!!)
                 return false
             }
 
-            val fileDescriptor = usbDeviceConnection?.fileDescriptor ?: 0
-            if (fileDescriptor <= 0) {
-                lastZKError = "Impossible de récupérer le file descriptor USB"
-                Log.e(TAG, lastZKError!!)
-                return false
-            }
-
-            mhDevice = FingerprintSensorEx.OpenDevice(fileDescriptor)
-            if (mhDevice == 0L) {
-                lastZKError = "Impossible d'ouvrir le lecteur ZKTeco 9500 avec le file descriptor"
-                Log.e(TAG, lastZKError!!)
-                return false
-            }
-
-            mhDB = FingerprintSensorEx.DBInit()
-            if (mhDB == 0L) {
-                lastZKError = "Impossible d'initialiser le DB ZKTeco"
-                Log.e(TAG, lastZKError!!)
-                closeZKDevice()
-                return false
-            }
-
-            val paramValue = ByteArray(4)
-            val size = intArrayOf(4)
-            if (FingerprintSensorEx.GetParameters(mhDevice, 1, paramValue, size) != FingerprintSensorErrorCode.ZKFP_ERR_OK) {
-                Log.e(TAG, "Failed to obtain ZKTeco fingerprint width")
-                closeZKDevice()
-                return false
-            }
-            fpWidth = byteArrayToInt(paramValue)
-
-            size[0] = 4
-            if (FingerprintSensorEx.GetParameters(mhDevice, 2, paramValue, size) != FingerprintSensorErrorCode.ZKFP_ERR_OK) {
-                lastZKError = "Impossible de lire la hauteur d'image du ZKTeco"
-                Log.e(TAG, lastZKError!!)
-                closeZKDevice()
-                return false
-            }
-            fpHeight = byteArrayToInt(paramValue)
-
-            if (fpWidth <= 0 || fpHeight <= 0) {
-                Log.e(TAG, "Invalid ZKTeco fingerprint dimensions: ${fpWidth}x${fpHeight}")
-                closeZKDevice()
-                return false
-            }
-
-            imgbuf = ByteArray(fpWidth * fpHeight)
             zktecoDeviceOpened = true
-            Log.d(TAG, "ZKTeco 9500 device opened and ready")
+            Log.d(TAG, "ZKTeco device opened and ready")
             true
         } catch (e: Exception) {
-            lastZKError = "Erreur interne lors de l'ouverture du lecteur ZKTeco"
-            Log.e(TAG, "Failed to open ZKTeco 9500 device: ${e.message}")
-            closeZKDevice()
-            false
+            lastZKError = "Erreur interne lors de l'ouverture du lecteur ZKTeco: ${e.message}"
+            Log.e(TAG, lastZKError!!)
+            return false
         }
     }
 
@@ -416,74 +292,31 @@ class BiometricService(private val activity: Activity) {
 
     private fun closeZKDevice() {
         try {
-            if (mhDB != 0L) {
-                FingerprintSensorEx.DBFree(mhDB)
-                mhDB = 0
-            }
-            if (mhDevice != 0L) {
-                FingerprintSensorEx.CloseDevice(mhDevice)
-                mhDevice = 0
-            }
-            FingerprintSensorEx.Terminate()
-        } catch (ignored: Exception) {
-            Log.w(TAG, "Error closing ZKTeco device: ${ignored.message}")
+            zktecoManager.closeDevice()
+        } catch (e: Exception) {
+            Log.w(TAG, "Error closing ZKTeco device: ${e.message}")
         } finally {
             zktecoDeviceOpened = false
-            imgbuf = null
-            usbInterface?.let {
-                try {
-                    usbDeviceConnection?.releaseInterface(it)
-                } catch (ignored: Exception) {
-                }
-            }
-            usbDeviceConnection?.close()
-            usbDeviceConnection = null
-            usbInterface = null
+            usbPermissionGranted = false
         }
-    }
-
-    private fun byteArrayToInt(bytes: ByteArray): Int {
-        if (bytes.size < 4) return 0
-        return (bytes[0].toInt() and 0xFF) or
-            ((bytes[1].toInt() and 0xFF) shl 8) or
-            ((bytes[2].toInt() and 0xFF) shl 16) or
-            ((bytes[3].toInt() and 0xFF) shl 24)
     }
 
     private suspend fun captureFingerprintFromDevice(): ByteArray? {
         return try {
-            if (mhDevice == 0L) {
-                Log.e(TAG, "ZKTeco device not opened")
+            if (!zktecoDeviceOpened) {
+                Log.e(TAG, "ZKTeco device is not prepared")
                 return null
             }
 
-            Log.d(TAG, "ZKTeco 9500 prêt. Attente du doigt sur le capteur...")
-            val imageBuffer = imgbuf ?: run {
-                Log.e(TAG, "Image buffer is not initialized")
-                return null
-            }
-            val template = ByteArray(2048)
-            val templateLen = IntArray(1)
-
-            while (true) {
-                val result = FingerprintSensorEx.AcquireFingerprint(mhDevice, imageBuffer, template, templateLen)
-                if (result < 0) {
-                    Log.e(TAG, "AcquireFingerprint failed or native libs missing: result=$result")
-                    return null
-                }
-                if (result == FingerprintSensorErrorCode.ZKFP_ERR_OK) {
-                    break
-                }
-                delay(300)
-            }
-
-            if (templateLen[0] <= 0) {
-                Log.e(TAG, "ZKTeco capture returned empty template")
+            Log.d(TAG, "ZKTeco device ready. Waiting for finger placement...")
+            val template = zktecoManager.captureFingerprint()
+            if (template == null || template.isEmpty()) {
+                Log.e(TAG, "Failed to capture fingerprint from ZKTeco device")
                 return null
             }
 
-            Log.d(TAG, "Fingerprint captured, template length=${templateLen[0]}")
-            return template.copyOf(templateLen[0])
+            Log.d(TAG, "Fingerprint template captured, length=${template.size}")
+            return template
         } catch (e: Exception) {
             Log.e(TAG, "Device communication error: ${e.message}")
             null
@@ -502,35 +335,18 @@ class BiometricService(private val activity: Activity) {
     }
 
     private fun compareFingerprintWithStored(liveFingerprint: ByteArray): Boolean {
-        for (storedBase64 in biometricDataInMemoryBase64) {
-            val storedFingerprint = decodeBase64BiometricData(storedBase64) ?: continue
-            val score = calculateMatchScore(liveFingerprint, storedFingerprint)
-
-            Log.d(TAG, "Match score with stored fingerprint: $score")
-
-            if (score >= THRESHOLD) {
-                Log.d(TAG, "Match found with score: $score (threshold: $THRESHOLD)")
-                return true
-            }
+        if (liveFingerprint.isEmpty()) {
+            Log.e(TAG, "Live fingerprint template is empty")
+            return false
+        }
+        if (biometricDataInMemoryBase64.isEmpty()) {
+            Log.e(TAG, "No biometric data in memory to compare")
+            return false
         }
 
-        Log.d(TAG, "No fingerprint match found. Required threshold: $THRESHOLD")
-        return false
-    }
-
-    private fun calculateMatchScore(fingerprint1: ByteArray, fingerprint2: ByteArray): Int {
-        if (fingerprint1.size != fingerprint2.size) {
-            return 0
-        }
-
-        var matches = 0
-        for (i in fingerprint1.indices) {
-            if (fingerprint1[i] == fingerprint2[i]) {
-                matches++
-            }
-        }
-
-        return (matches * 100) / fingerprint1.size
+        val matchFound = zktecoManager.compareAgainstStoredTemplates(liveFingerprint, biometricDataInMemoryBase64, THRESHOLD)
+        Log.d(TAG, "Fingerprint identification result: $matchFound")
+        return matchFound
     }
 
     fun decodeBase64BiometricData(base64String: String): ByteArray? {
